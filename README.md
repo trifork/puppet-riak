@@ -12,6 +12,7 @@ class {"riak":
     http_address => "127.0.0.1,
     backend_default => "eleveldb"
     backends => [],
+    default_bucket_props => "[{n_val,1}]"
     vmargs_pa => "/usr/lib/relai",
     vmargs_s = "riak_sync"
 }
