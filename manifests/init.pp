@@ -15,38 +15,42 @@ class riak(
     $package_location = "/tmp/${package_name}"
     $download_url = "http://s3.amazonaws.com/downloads.basho.com/riak/${version_minor}/${version_patch}/ubuntu/precise/${package_name}" #TODO: detect Ubuntu version
 
+    notice("/bin/echo ```/usr/bin/wget -q -O - ${download_url}.sha``` | /usr/bin/sha1sum -c -")
+
     exec {"download-riak":
         command => "/usr/bin/wget -O ${package_location} ${download_url}",
-        unless => "/bin/echo ```/usr/bin/wget -q -O - ${download_url}.sha``` \\*${package_location} | /usr/bin/sha1sum -c -",
+#        unless => "/bin/echo ```/usr/bin/wget -q -O - ${download_url}.sha``` \\*${package_location} | /usr/bin/sha1sum -c -",
+        creates => $package_location
     }
 
 	package {"libssl0.9.8":
 	    ensure => installed,
+	    before => Package["riak"]
 	}
 
     package {"riak":
         provider => "dpkg",
         ensure => latest,
         source => $package_location,
-        require => [Exec["download-riak"], Package["libssl0.9.8"]]
+        require => [Exec["download-riak"]]
     }
 
-    #file {"/etc/riak/vm.args":
-    #    ensure => file,
-    #    mode => 644,
-    #    require => Package["riak"],
-    #    content => template("riak/vm.args")
-    #}
-    #
-    #file {"/etc/riak/app.config":
-    #    ensure => file,
-    #    mode => 644,
-    #    require => Package["riak"],
-    #    content => template("riak/app.config")
-    #}
+    file {"/etc/riak/vm.args":
+        ensure => file,
+        mode => 644,
+        require => Package["riak"],
+        content => template("riak/vm.args")
+    }
+
+    file {"/etc/riak/app.config":
+        ensure => file,
+        mode => 644,
+        require => Package["riak"],
+        content => template("riak/app.config")
+    }
 
     service {"riak":
         ensure => running,
-        #require => [File["/etc/riak/vm.args"], File["/etc/riak/app.config"]]
+        require => [File["/etc/riak/vm.args"], File["/etc/riak/app.config"]]
     }
 }
