@@ -6,7 +6,8 @@ class riak(
     $backend_default = "bitcask",
     $backends = [],
     $vmargs_pa = "",
-    $vmargs_s = "") {
+    $vmargs_s = "",
+    $additional_configuration = "") {
 
     $version_split = split($version, "[.-]")
     $version_minor = "${version_split[0]}.${version_split[1]}"
