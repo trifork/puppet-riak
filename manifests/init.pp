@@ -3,6 +3,9 @@ class riak(
     $node_name = "riak@127.0.0.1",
     $ring_creation_size = 64,
     $http_address = "127.0.0.1",
+    $ssl_cert = false,
+    $ssl_cacert = false,
+    $ssl_key = false,
     $backend_default = "bitcask",
     $backends = [],
     $vmargs_pa = "",
@@ -15,8 +18,6 @@ class riak(
     $package_name = "riak_${version}_amd64.deb"
     $package_location = "/tmp/${package_name}"
     $download_url = "http://s3.amazonaws.com/downloads.basho.com/riak/${version_minor}/${version_patch}/ubuntu/precise/${package_name}" #TODO: detect Ubuntu version
-
-    notice("/bin/echo ```/usr/bin/wget -q -O - ${download_url}.sha``` | /usr/bin/sha1sum -c -")
 
     exec {"download-riak":
         command => "/usr/bin/wget -O ${package_location} ${download_url}",
@@ -48,6 +49,16 @@ class riak(
         mode => 644,
         require => Package["riak"],
         content => template("riak/app.config")
+    }
+
+    if $ssl_key {
+        debug("Enabling SSL enctryption")
+        File[$ssl_key] ~> Service["riak"]
+        File[$ssl_cert] ~> Service["riak"]
+        if $ssl_cacert {
+            debug("Enabling SSL mutual authentication")
+            File[$ssl_cacert] ~> Service["riak"]
+        }
     }
 
     service {"riak":
